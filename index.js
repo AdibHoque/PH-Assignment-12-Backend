@@ -37,6 +37,7 @@ async function run() {
 
     app.get("/biodatas", async (req, res) => {
       const idQuery = req.query.id
+      const premiumQuery = req.query.premium
 
       if (idQuery) {
         const q = { _id: new ObjectId(idQuery) }
@@ -44,8 +45,45 @@ async function run() {
         return res.send(result);
       }
 
+      if (premiumQuery) {
+        const q = { premium: true }
+        const cursor = biodataCollection.find(q);
+        const result = await cursor.toArray();
+        return res.send(result);
+      }
+
       const cursor = biodataCollection.find();
       const result = await cursor.toArray();
+      res.send(result);
+    })
+
+    app.post('/biodatas', async (req, res) => {
+      const cursor = biodataCollection.find();
+      const biodatas = await cursor.toArray();
+      const newBiodata = req.body;
+      const obj = {
+        biodataId: biodatas.length + 1,
+        gender: newBiodata.gender,
+        name: newBiodata.name,
+        profileImage: newBiodata.profileImage,
+        dob: newBiodata.dob,
+        height: newBiodata.height,
+        weight: newBiodata.weight,
+        age: newBiodata.age,
+        occupation: newBiodata.occupation,
+        race: newBiodata.race,
+        fathersName: newBiodata.fathersName,
+        mothersName: newBiodata.mothersName,
+        permanentDivision: newBiodata.permanentDivision,
+        presentDivision: newBiodata.presentDivision,
+        expectedPartnerAge: newBiodata.expectedPartnerAge,
+        expectedPartnerHeight: newBiodata.expectedPartnerHeight,
+        expectedPartnerWeight: newBiodata.expectedPartnerWeight,
+        contactEmail: newBiodata.contactEmail,
+        mobileNumber: newBiodata.mobileNumber,
+        premium: newBiodata.premium,
+      };
+      const result = await biodataCollection.insertOne(obj);
       res.send(result);
     })
     // Send a ping to confirm a successful connection
