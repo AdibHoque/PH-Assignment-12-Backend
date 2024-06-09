@@ -35,6 +35,7 @@ async function run() {
     // await client.connect();
     const biodataCollection = client.db('TrueBond').collection('biodatas');
     const premiumCollection = client.db('TrueBond').collection('premiumrequests');
+    const usersCollection = client.db('TrueBond').collection('users');
 
     app.get("/biodatas", async (req, res) => {
       const idQuery = req.query.id
@@ -106,6 +107,12 @@ async function run() {
     app.post('/requestpremium', async (req, res) => {
       const newRequest = req.body;
       const result = await premiumCollection.insertOne(newRequest);
+      res.send(result);
+    })
+
+    app.post('/users', async (req, res) => {
+      const newUser = req.body;
+      const result = await usersCollection.insertOne(newUser);
       res.send(result);
     })
     // Send a ping to confirm a successful connection
