@@ -38,6 +38,7 @@ async function run() {
     const premiumCollection = client.db('TrueBond').collection('premiumrequests');
     const usersCollection = client.db('TrueBond').collection('users');
     const marriedCollection = client.db('TrueBond').collection('marriedstory');
+    const contactCollection = client.db('TrueBond').collection('contactrequests');
 
     app.get("/biodatas", async (req, res) => {
       const idQuery = req.query.id
@@ -195,6 +196,36 @@ async function run() {
         clientSecret: paymentIntent.client_secret
       })
     });
+
+    app.get("/contactrequests", async (req, res) => {
+      const emailQuery = req.query.email
+      if (emailQuery) {
+        const q = { requesterEmail: emailQuery }
+        const cursor = contactCollection.find(q);
+        const result = await cursor.toArray();
+        return res.send(result);
+      }
+      const cursor = contactCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
+    app.post('/contactrequests', async (req, res) => {
+      const newRequest = req.body;
+      const result = await contactCollection.insertOne(newRequest);
+      res.send(result);
+    })
+    app.patch('/contactrequests/approve/:id', async (req, res) => {
+      const id = req.params.id
+      const filter = { _id: new ObjectId(id) }
+      const updatedDoc = {
+        $set: {
+          status: 'approved'
+        }
+      }
+      const result = await contactCollection.updateOne(filter, updatedDoc)
+      res.send(result)
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
