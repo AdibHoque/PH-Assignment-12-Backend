@@ -4,10 +4,44 @@ const cors = require('cors');
 const app = express()
 const port = process.env.PORT || 5000
 const stripe = require('stripe')(process.env.STRIPE_SK);
+const jwt = require('jsonwebtoken');
 
-app.use(cors())
+const cookieParser = require('cookie-parser');
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+};
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://truebond-matrimony.web.app',
+    'https://truebond-matrimony.firebaseapp.com'
+  ],
+  credentials: true
+}))
 app.use(express.json())
+app.use(cookieParser());
 
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies?.token;
+  if (!token) {
+    console.log("no token")
+    return res.status(401).send({ message: 'Unauthorized Access' })
+  }
+  jwt.verify(token, process.env.SECRET, (err, decoded) => {
+    if (err) {
+      console.log("invalid token")
+      return res.status(401).send({ message: 'Unauthorized Access' })
+    }
+    req.user = decoded;
+    next();
+  })
+}
+const logger = (req, res, next) => {
+  console.log('logging info', req.method, req.url);
+  next();
+}
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
@@ -40,6 +74,20 @@ async function run() {
     const marriedCollection = client.db('TrueBond').collection('marriedstory');
     const contactCollection = client.db('TrueBond').collection('contactrequests');
     const revenueCollection = client.db('TrueBond').collection('revenue');
+
+    app.post('/jwt', logger, async (req, res) => {
+      const user = req.body;
+
+      const token = jwt.sign(user, process.env.SECRET, { expiresIn: '1h' });
+
+      res.cookie('token', token, cookieOptions)
+        .send({ success: true });
+    })
+
+    app.post('/logout', async (req, res) => {
+      console.log("Logout")
+      res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+    })
 
     app.get("/biodatas", async (req, res) => {
       const idQuery = req.query.id
@@ -166,6 +214,7 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     })
+
     app.post('/marriedstory', async (req, res) => {
       const newRequest = req.body;
       const result = await marriedCollection.insertOne(newRequest);
