@@ -39,6 +39,7 @@ async function run() {
     const usersCollection = client.db('TrueBond').collection('users');
     const marriedCollection = client.db('TrueBond').collection('marriedstory');
     const contactCollection = client.db('TrueBond').collection('contactrequests');
+    const revenueCollection = client.db('TrueBond').collection('revenue');
 
     app.get("/biodatas", async (req, res) => {
       const idQuery = req.query.id
@@ -107,12 +108,6 @@ async function run() {
       res.send(result);
     })
 
-    app.post('/requestpremium', async (req, res) => {
-      const newRequest = req.body;
-      const result = await premiumCollection.insertOne(newRequest);
-      res.send(result);
-    })
-
     app.post('/users', async (req, res) => {
       const newUser = req.body;
       const query = { email: newUser.email }
@@ -126,6 +121,14 @@ async function run() {
     })
 
     app.get("/users", async (req, res) => {
+      const emailQuery = req.query.email
+
+      if (emailQuery) {
+        const q = { email: emailQuery }
+        const result = await usersCollection.findOne(q);
+        return res.send(result);
+      }
+
       const cursor = usersCollection.find();
       const result = await cursor.toArray();
       res.send(result);
@@ -153,11 +156,19 @@ async function run() {
       }
       const result = await biodataCollection.updateOne(filter, updatedDoc)
       res.send(result)
+
+      const filter2 = { email: email }
+      const result2 = await premiumCollection.deleteOne(filter2)
     })
 
     app.get("/marriedstory", async (req, res) => {
       const cursor = marriedCollection.find();
       const result = await cursor.toArray();
+      res.send(result);
+    })
+    app.post('/marriedstory', async (req, res) => {
+      const newRequest = req.body;
+      const result = await marriedCollection.insertOne(newRequest);
       res.send(result);
     })
 
@@ -173,12 +184,17 @@ async function run() {
       const cursor3 = premiumCollection.find();
       const result3 = await cursor3.toArray();
 
+      const filter1 = { name: 'revenue' };
+      const result4 = await revenueCollection.findOne(filter1);
+
+
       const data = {
         totalBiodatas: result.length,
         maleBiodatas: maleData.length,
         femaleBiodatas: femaleData.length,
         marriages: result2.length,
-        premiumUsers: result3.length
+        premiumUsers: result3.length,
+        revenue: result4.money
       }
       res.send(data)
     })
@@ -236,14 +252,7 @@ async function run() {
     })
 
     app.get("/premiumrequests", async (req, res) => {
-      const emailQuery = req.query.email
-      if (emailQuery) {
-        const q = { contactEmail: emailQuery }
-        const cursor = premiumCollection.find(q);
-        const result = await cursor.toArray();
-        return res.send(result);
-      }
-      const cursor = contactCollection.find();
+      const cursor = premiumCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     })
@@ -253,6 +262,19 @@ async function run() {
       const result = await premiumCollection.insertOne(newRequest);
       res.send(result);
     })
+
+    app.patch('/revenue', async (req, res) => {
+      const filter = { name: 'revenue' };
+      const updateDoc = {
+
+        $inc: {
+          money: 5
+        }
+      };
+      const result = await revenueCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    })
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
