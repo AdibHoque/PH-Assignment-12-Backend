@@ -215,6 +215,7 @@ async function run() {
       const result = await contactCollection.insertOne(newRequest);
       res.send(result);
     })
+
     app.patch('/contactrequests/approve/:id', async (req, res) => {
       const id = req.params.id
       const filter = { _id: new ObjectId(id) }
@@ -227,6 +228,31 @@ async function run() {
       res.send(result)
     })
 
+    app.delete('/contactrequests/delete/:id', async (req, res) => {
+      const id = req.params.id
+      const filter = { _id: new ObjectId(id) }
+      const result = await contactCollection.deleteOne(filter)
+      res.send(result)
+    })
+
+    app.get("/premiumrequests", async (req, res) => {
+      const emailQuery = req.query.email
+      if (emailQuery) {
+        const q = { contactEmail: emailQuery }
+        const cursor = premiumCollection.find(q);
+        const result = await cursor.toArray();
+        return res.send(result);
+      }
+      const cursor = contactCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
+    app.post('/premiumrequests', async (req, res) => {
+      const newRequest = req.body;
+      const result = await premiumCollection.insertOne(newRequest);
+      res.send(result);
+    })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
