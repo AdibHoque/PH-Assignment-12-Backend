@@ -113,9 +113,52 @@ async function run() {
         return res.send(result);
       }
 
-      const cursor = biodataCollection.find();
+      let filter = {};
+      const age = req.query.age || "";
+      const gender = req.query.gender || "";
+      const division = req.query.division || "";
+      const search = req.query.search || "";
+      const isPremium = req.query.isPremium || "";
+
+      if (search.trim() !== "") {
+        filter.name = { $regex: search, $options: "i" };
+      }
+
+      if (age) {
+        const [minAge, maxAge] = age.split("-").map(Number);
+        filter.age = { $gte: minAge, $lte: maxAge };
+      }
+
+      if (gender) {
+        filter.gender = gender
+      }
+      if (division) {
+        filter.permanentDivision = division
+      }
+
+      if (isPremium === "true") {
+        filter.premium = true;
+      } else if (isPremium === "false") {
+        filter.premium = { $ne: true };
+      }
+
+
+      const page = parseInt(req.query.page) || 1;
+      const limit = 9;
+      const skip = (page - 1) * limit;
+
+      const total = await biodataCollection.countDocuments(filter);
+      const cursor = biodataCollection.find(filter).skip(skip).limit(limit);
       const result = await cursor.toArray();
-      res.send(result);
+
+      const data = {
+        totalBiodatas: total,
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        biodatas: result
+      };
+
+      res.send(data);
     })
 
     app.post('/biodatas', async (req, res) => {
@@ -222,28 +265,21 @@ async function run() {
     })
 
     app.get("/stats", async (req, res) => {
-      const cursor = biodataCollection.find();
-      const result = await cursor.toArray();
-      const maleData = result.filter(d => d.gender == 'Male')
-      const femaleData = result.filter(d => d.gender == 'Female')
-
-      const cursor2 = marriedCollection.find();
-      const result2 = await cursor2.toArray();
-
-      const cursor3 = premiumCollection.find();
-      const result3 = await cursor3.toArray();
-
-      const filter1 = { name: 'revenue' };
-      const result4 = await revenueCollection.findOne(filter1);
+      const totalBiodatas = await biodataCollection.countDocuments();
+      const maleBiodatas = await biodataCollection.countDocuments({ gender: 'Male' });
+      const femaleBiodatas = await biodataCollection.countDocuments({ gender: 'Female' });
+      const premiumUsers = await biodataCollection.countDocuments({ premium: true });
+      const marriages = await marriedCollection.countDocuments()
+      const revenue = await revenueCollection.findOne({ name: 'revenue' });
 
 
       const data = {
-        totalBiodatas: result.length,
-        maleBiodatas: maleData.length,
-        femaleBiodatas: femaleData.length,
-        marriages: result2.length,
-        premiumUsers: result3.length,
-        revenue: result4.money
+        totalBiodatas: totalBiodatas,
+        maleBiodatas: maleBiodatas,
+        femaleBiodatas: femaleBiodatas,
+        marriages: marriages,
+        premiumUsers: premiumUsers,
+        revenue: revenue.money
       }
       res.send(data)
     })
@@ -325,8 +361,8 @@ async function run() {
     })
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
