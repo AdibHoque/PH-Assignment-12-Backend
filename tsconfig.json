@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ESNext", // Target ECMAScript version
+    "module": "CommonJS", // Use CommonJS module system
+    "rootDir": ".", // Use the root directory for TypeScript files
+    "outDir": "./dist", // Output compiled JavaScript files to the 'dist' folder
+    "strict": true, // Enable strict type checking
+    "esModuleInterop": true, // Allow default imports from modules
+    "forceConsistentCasingInFileNames": true, // Ensure consistent file casing
+    "skipLibCheck": true // Skip type checking of declaration files
+  },
+  "include": ["**/*.ts"], // Include all TypeScript files in the root and subdirectories
+  "exclude": ["node_modules", "dist"] // Exclude node_modules and dist directories
+}
