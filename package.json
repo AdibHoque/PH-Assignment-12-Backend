@@ -1,6 +1,6 @@
 {
   "name": "truebond-matrimony-backend",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A RESTful API for managing biodatas, users, marriage stories, and payments using Node.js, Express, and MongoDB.",
   "main": "dist/index.js",
   "scripts": {
