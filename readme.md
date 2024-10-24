@@ -8,7 +8,7 @@ This API provides a set of routes for managing biodatas, users, marriage stories
 
 ## Base URL
 
-https://truebond-matrimony.vercel.app/
+### https://truebond-matrimony.vercel.app/
 
 ## Technologies Used
 
@@ -22,22 +22,23 @@ https://truebond-matrimony.vercel.app/
 
 ## Folder Structure
 
-.
-├── dist
-│ ├── index.js
-├── routes
-│ ├── biodatas.routes.ts
-│ ├── contact.routes.ts
-│ ├── married.routes.ts
-│ ├── premium.routes.ts
-│ ├── users.routes.ts
-├── interfaces
-│ ├── biodata.interfaces.ts
-│ ├── user.interfaces.ts
-├── node_modules
-├── package.json
-├── package-lock.json
-└── .env
+- **.**
+  - **dist/**
+    - `index.js`
+  - **routes/**
+    - `biodatas.routes.ts`
+    - `contact.routes.ts`
+    - `married.routes.ts`
+    - `premium.routes.ts`
+    - `users.routes.ts`
+  - **interfaces/**
+    - `biodata.interfaces.ts`
+    - `user.interfaces.ts`
+  - **node_modules/**
+  - `index.ts`
+  - `package.json`
+  - `package-lock.json`
+  - `.env`
 
 ## Endpoints
 
