@@ -15,22 +15,51 @@ export const biodatasRoutes = (
     const emailQuery = req.query.email as string | undefined;
 
     if (idQuery) {
-      const q = {_id: new ObjectId(idQuery)};
-      const result = await biodataCollection.findOne(q);
-      res.send(result);
+      try {
+        if (!ObjectId.isValid(idQuery)) {
+          res.status(400).send({
+            message: "Invalid ID format. Must be a 24 character hex string.",
+          });
+          return;
+        }
+
+        const q = {_id: new ObjectId(idQuery)};
+        const result = await biodataCollection.findOne(q);
+
+        if (result) {
+          res.send(result);
+        } else {
+          res.status(404).send({message: "No data found"});
+        }
+      } catch (error) {
+        res.status(500).send({message: "Internal Server Error"});
+      }
     }
 
     if (premiumQuery) {
       const q = {premium: true};
       const cursor = biodataCollection.find(q);
       const result = await cursor.toArray();
-      res.send(result);
+      if (result) {
+        res.send(result);
+        return;
+      } else {
+        res.status(404).send({message: "No data found"});
+        return;
+      }
     }
 
     if (emailQuery) {
-      const q = {contactEmail: emailQuery};
+      const decodedEmail = decodeURIComponent(emailQuery);
+      const q = {contactEmail: decodedEmail};
       const result = await biodataCollection.findOne(q);
-      res.send(result);
+      if (result) {
+        res.send(result);
+        return;
+      } else {
+        res.status(404).send({message: "No data found"});
+        return;
+      }
     }
 
     let filter: any = {};
@@ -123,7 +152,8 @@ export const biodatasRoutes = (
   // PATCH for add premium to biodatas
   router.patch("/premium/:email", async (req: Request, res: Response) => {
     const email = req.params.email;
-    const filter = {contactEmail: email};
+    const decodedEmail = decodeURIComponent(email);
+    const filter = {contactEmail: decodedEmail};
     const updatedDoc = {
       $set: {
         premium: true,
@@ -132,7 +162,7 @@ export const biodatasRoutes = (
     const result = await biodataCollection.updateOne(filter, updatedDoc);
     res.send(result);
 
-    const filter2 = {email: email};
+    const filter2 = {email: decodedEmail};
     await premiumCollection.deleteOne(filter2);
   });
 

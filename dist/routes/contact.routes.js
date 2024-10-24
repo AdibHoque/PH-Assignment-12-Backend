@@ -9,10 +9,18 @@ const contactRoutes = (contactCollection) => {
     router.get("/", async (req, res) => {
         const emailQuery = req.query.email;
         if (emailQuery) {
-            const q = { requesterEmail: emailQuery };
+            const decodedEmail = decodeURIComponent(emailQuery);
+            const q = { requesterEmail: decodedEmail };
             const cursor = contactCollection.find(q);
             const result = await cursor.toArray();
-            res.send(result);
+            if (result) {
+                res.send(result);
+                return;
+            }
+            else {
+                res.status(404).send({ message: "No data found" });
+                return;
+            }
         }
         const cursor = contactCollection.find();
         const result = await cursor.toArray();

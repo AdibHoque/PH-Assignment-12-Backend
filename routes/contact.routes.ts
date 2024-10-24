@@ -6,12 +6,19 @@ const router = Router();
 export const contactRoutes = (contactCollection: Collection) => {
   // GET all Contact Requests
   router.get("/", async (req: Request, res: Response) => {
-    const emailQuery = req.query.email;
+    const emailQuery = req.query.email as string;
     if (emailQuery) {
-      const q = {requesterEmail: emailQuery};
+      const decodedEmail = decodeURIComponent(emailQuery);
+      const q = {requesterEmail: decodedEmail};
       const cursor = contactCollection.find(q);
       const result = await cursor.toArray();
-      res.send(result);
+      if (result) {
+        res.send(result);
+        return;
+      } else {
+        res.status(404).send({message: "No data found"});
+        return;
+      }
     }
     const cursor = contactCollection.find();
     const result = await cursor.toArray();
